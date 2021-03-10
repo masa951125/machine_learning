@@ -3,6 +3,7 @@ install.packages("e1071")
 install.packages("caret")
 library(caret)
 library(dslabs)
+library(purr)
 data(heights)
 
 # define the outcome and predictors
@@ -55,8 +56,6 @@ mnist <- read_mnist()
 ncol(mnist$train$images)
 
 # tabulate each combination of prediction and actual value
-
-
 table(predicted= y_hat, actual= test_set$sex)
 
 #calculating accuracy
@@ -69,7 +68,6 @@ prev
 confusionMatrix(data= y_hat,reference = test_set$sex)
 
 # maximize F-score
-
 cutoff <- seq(61, 70)
 F_1 <- map_dbl(cutoff, function(x){
   y_hat <- ifelse(train_set$height > x, "Male", "Female") %>% 
@@ -186,3 +184,114 @@ bind_rows(guessing, height_cutoff) %>%
   ggplot(aes(recall, precision, color = method)) +
   geom_line() +
   geom_point()
+
+#comprehension check part1
+
+library(dslabs)
+library(dplyr)
+library(lubridate)
+data(reported_heights)
+
+dat <- mutate(reported_heights, date_time = ymd_hms(time_stamp)) %>%
+  filter(date_time >= make_date(2016, 01, 25) & date_time < make_date(2016, 02, 1)) %>%
+  mutate(type = ifelse(day(date_time) == 25 & hour(date_time) == 8 & between(minute(date_time), 15, 30), "inclass","online")) %>%
+  select(sex, type)
+
+y <- factor(dat$sex, c("Female", "Male"))
+x <- dat$type
+
+sum(dat$sex=="Female" & dat$type=="inclass")/sum(dat$type=="inclass")
+sum(dat$sex=="Female" & dat$type=="online")/sum(dat$type=="online")
+
+dat %>% group_by(type) %>% summarize(prop_female = mean(sex == "Female"))
+
+#Find accuracy
+y_hat <- ifelse(x=="online", "Male", "Female") %>%
+factor(levels= levels(y))
+mean(y_hat==y)
+
+y_hat <- ifelse(dat$type=="inclass", "Female", "Male") %>%
+  factor(levels=levels(y))
+mean(y_hat==dat$sex)
+
+confusionMatrix(y_hat,y)
+table(y_hat,y)
+sensitivity(y_hat,y)
+specificity(y_hat,y)
+
+mean(dat$sex=="Female")
+
+#comprehension check part2
+library(caret)
+library(purrr)
+data(iris)
+iris <- iris[-which(iris$Species=='setosa'),]
+y <- iris$Species
+
+set.seed(2, sample.kind="Rounding")
+class(y)
+
+#train$Sepal.Length
+range(train$Sepal.Length)
+
+cutoff_SL <-seq(5.0,7.9, by=0.1)
+accuracy <- map_dbl(cutoff_SL, function(x){
+  y_hat <- ifelse(train$Sepal.Length > x, "virginica", "versicolor")
+  factor(levels= levels(train$Species))
+  mean(y_hat == train$Species)
+})
+max(accuracy)
+
+#train$Sepal.Width
+range(train$Sepal.Width)
+
+cutoff_SW <-seq(2.0,3.8, by=0.1)
+accuracy <- map_dbl(cutoff_SW, function(x){
+  y_hat <- ifelse(train$Sepal.Width > x, "virginica","versicolor")
+  factor(levels= levels(train$Species))
+  mean(y_hat == train$Species)
+})
+max(accuracy)
+
+#train$Petal.Length
+range(train$Petal.Length)
+
+cutoff_PL <-seq(3.0,6.9, by=0.1)
+accuracy <- map_dbl(cutoff_PL, function(x){
+  y_hat <- ifelse(train$Petal.Length > x, "virginica","versicolor")
+  factor(levels= levels(train$Species))
+  mean(y_hat == train$Species)
+})
+max(accuracy)
+
+
+#train$Petal.Width
+range(train$Petal.Width)
+
+cutoff_PW <-seq(1.0,2.5, by=0.1)
+accuracy <- map_dbl(cutoff_PW, function(x){
+  y_hat <- ifelse(train$Petal.Width > x, "virginica", "versicolor")
+  factor(levels= levels(train$Species))
+  mean(y_hat == train$Species)
+})
+max(accuracy)
+
+#simple code
+foo <- function(x){
+  rangedValues <- seq(range(x)[1],range(x)[2],by=0.1)
+  sapply(rangedValues,function(i){
+    y_hat <- ifelse(x>i,'virginica','versicolor')
+    mean(y_hat==train$Species)
+  })
+}
+predictions <- apply(train[,-5],2,foo)
+sapply(predictions,max)	
+
+#calculating overall accuracy
+
+best_cutoff_PL <- cutoff_PL[which.max(accuracy)]
+best_cutoff_PL
+
+y_hat <- ifelse(test$Petal.Length > best_cutoff_PL, "virginica","versicolor")%>%
+  factor(levels= levels(test$Species))
+mean(y_hat == test$Species)
