@@ -295,3 +295,16 @@ best_cutoff_PL
 y_hat <- ifelse(test$Petal.Length > best_cutoff_PL, "virginica","versicolor")%>%
   factor(levels= levels(test$Species))
 mean(y_hat == test$Species)
+
+#test data
+
+foo_test <- function(x){
+  rangedValues <- seq(range(x)[1],range(x)[2],by=0.1)
+  sapply(rangedValues,function(i){
+    y_hat <- ifelse(x>i,'virginica','versicolor')
+    mean(y_hat==test$Species)
+  })
+}
+predictions_test <- apply(test[,-5],2,foo_test)
+sapply(predictions_test,max)	
+
