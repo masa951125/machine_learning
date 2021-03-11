@@ -308,3 +308,33 @@ foo_test <- function(x){
 predictions_test <- apply(test[,-5],2,foo_test)
 sapply(predictions_test,max)	
 
+plot(iris,pch=21,bg=iris$Species)
+
+#simple code
+foo <- function(x){
+  rangedValues <- seq(range(x)[1],range(x)[2],by=0.1)
+  sapply(rangedValues,function(i){
+    y_hat <- ifelse(x>i,'virginica','versicolor')
+    mean(y_hat==train$Species)
+  })
+}
+predictions <- apply(train[,-5],2,foo)
+sapply(predictions,max)	
+
+predictions <- apply(train[,3],2,foo)
+sapply(predictions,max)	
+
+
+#PL&PW
+predictions_PL <- foo(train[,3])
+rangedValues <- seq(range(train[,3])[1],range(train[,3])[2],by=0.1)
+cutoffs_PL <-rangedValues[which(predictions_PL==max(predictions_PL))]
+
+predictions_PW <- foo(train[,4])
+rangedValues <- seq(range(train[,4])[1],range(train[,4])[2],by=0.1)
+cutoffs_PW <-rangedValues[which(predictions_PW==max(predictions_PW))]
+
+y_hat <- ifelse((test[,3]>cutoffs_PL[1]| test[,4]>cutoffs_PW[1]), 'virginica','versicolor')
+ 
+mean(y_hat==test$Species)
+
