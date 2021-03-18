@@ -163,3 +163,81 @@ dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
   fit <- lm(y ~ x_1 + x_2, data = train_set)
   y_hat <- predict(fit, newdata = test_set)
   sqrt(mean((y_hat-test_set$y)^2)) 
+  
+#Regression for a Categorical Outcome 
+
+  library(dslabs)
+  data("heights")
+  y <- heights$height  
+  set.seed(2, sample.kind = "Rounding") 
+  
+  test_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+  train_set <- heights %>% slice(-test_index)
+  test_set <- heights %>% slice(test_index)
+  
+  train_set %>% 
+    filter(round(height)==66) %>%
+    summarize(y_hat = mean(sex=="Female"))
+  
+  heights %>% 
+    mutate(x = round(height)) %>%
+    group_by(x) %>%
+    filter(n() >= 10) %>%
+    summarize(prop = mean(sex == "Female")) %>%
+    ggplot(aes(x, prop)) +
+    geom_point()
+
+  lm_fit <- mutate(train_set, y = as.numeric(sex == "Female")) %>% lm(y ~ height, data = .)
+  p_hat <- predict(lm_fit, test_set)
+  y_hat <- ifelse(p_hat > 0.5, "Female", "Male") %>% factor()
+  confusionMatrix(y_hat, test_set$sex)$overall["Accuracy"]
+  
+  library(caret)
+  
+  heights %>% 
+    mutate(x = round(height)) %>%
+    group_by(x) %>%
+    filter(n() >= 10) %>%
+    summarize(prop = mean(sex == "Female")) %>%
+    ggplot(aes(x, prop)) +
+    geom_point() + 
+    geom_abline(intercept = lm_fit$coef[1], slope = lm_fit$coef[2])
+  
+  range(p_hat)
+  
+  # fit logistic regression model
+  glm_fit <- train_set %>% 
+    mutate(y = as.numeric(sex == "Female")) %>%
+    glm(y ~ height, data=., family = "binomial") 
+  glm_fit
+  
+  p_hat_logit <- predict(glm_fit, newdata = test_set, type = "response")
+  
+  tmp <- heights %>% 
+    mutate(x = round(height)) %>%
+    group_by(x) %>%
+    filter(n() >= 10) %>%
+    summarize(prop = mean(sex == "Female")) 
+  
+  logistic_curve <- data.frame(x = seq(min(tmp$x), max(tmp$x))) %>%
+    mutate(p_hat = plogis(glm_fit$coef[1] + glm_fit$coef[2]*x))
+  tmp %>% 
+    ggplot(aes(x, prop)) +
+    geom_point() +
+    geom_line(data = logistic_curve, mapping = aes(x, p_hat), lty = 2)
+  
+  y_hat_logit <- ifelse(p_hat_logit > 0.5, "Female", "Male") %>% factor
+  confusionMatrix(y_hat_logit, test_set$sex)$overall[["Accuracy"]]
+  
+#2 or 7 problem
+  mnist <- read_mnist()
+  is <- mnist_27$index_train[c(which.min(mnist_27$train$x_1), which.max(mnist_27$train$x_1))]
+  titles <- c("smallest","largest")
+  tmp <- lapply(1:2, function(i){
+    expand.grid(Row=1:28, Column=1:28) %>%
+      mutate(label=titles[i],
+             value = mnist$train$images[is[i],])
+  }) 
+  
+read_mnist()
+
