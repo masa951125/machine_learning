@@ -176,4 +176,3 @@ Accuracy <- sapply(ks, function(k){
   mean(y_hat==test_set_y)
 })
 Accuracy
-
