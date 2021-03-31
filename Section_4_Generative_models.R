@@ -130,3 +130,64 @@ train_knn <- train(y ~ ., method = "knn", tuneGrid = data.frame(k = seq(15, 51, 
 confusionMatrix(predict(train_knn, test_set), test_set$y)$overall["Accuracy"]
 train_set %>% mutate(y = factor(y)) %>% ggplot(aes(x_1, x_2, fill = y, color=y)) + geom_point(show.legend = FALSE) + stat_ellipse(type="norm")
 
+rm(list= ls())
+
+#comprehension check
+library(dslabs)
+library(caret)
+library(tidyverse)
+data("tissue_gene_expression")
+
+set.seed(1993, sample.kind="Rounding") 
+ind <- which(tissue_gene_expression$y %in% c("cerebellum", "hippocampus"))
+y <- droplevels(tissue_gene_expression$y[ind])
+x <- tissue_gene_expression$x[ind, ]
+x <- x[, sample(ncol(x), 10)]
+
+fit <-train(x,y, method="lda",preProcess = "center")
+fit$results$Accuracy
+
+means <-fit$finalModel$means
+means <-as.data.frame(means)
+
+dat <-t(fit$finalModel$means)%>% data.frame() 
+dat %>% mutate(predictors = row.names(.) )%>%
+  ggplot(aes(predictors, hippocampus))+
+  geom_point()+
+
+d <- apply(fit$finalModel$means, 2, diff)
+ind <- order(abs(d), decreasing = TRUE)[1:2]
+plot(x[, ind], col = y)
+
+library(dslabs)      
+library(caret)
+data("tissue_gene_expression")
+
+set.seed(1993, sample.kind="Rounding") 
+y <- tissue_gene_expression$y
+x <- tissue_gene_expression$x
+x <- x[, sample(ncol(x), 10)]
+
+fit <- train(x,y, method = "lda")
+fit$results$Accuracy
+
+confusionMatrix(fit)
+
+set.seed(1993, sample.kind="Rounding")
+ind <- which(tissue_gene_expression$y %in% c("cerebellum", "hippocampus"))
+y <- droplevels(tissue_gene_expression$y[ind])
+x <- tissue_gene_expression$x[ind, ]
+x <- x[, sample(ncol(x), 10)]
+
+fit <-train(x, y, method="qda")
+fit$results$Accuracy
+
+means <-colMeans(fit$finalModel$means)
+sort(means)
+
+dat <-t(fit$finalModel$means)%>% data.frame() 
+dat %>% mutate(predictors = row.names(.) )%>%
+  ggplot(aes(label=predictors, cerebellum, hippocampus))+
+  geom_point()+
+  geom_text()+
+  geom_abline()
