@@ -61,7 +61,7 @@ ggplot(train_rpart)
 
 # access the final model and plot it
 plot(train_rpart$finalModel, margin = 0.1)
-text(train_rpart$finalModel, cex = 0.75)
+text(train_rpart$finalModel, cex = 1)
 
 polls_2008 %>% 
   mutate(y_hat = predict(train_rpart)) %>% 
@@ -71,4 +71,75 @@ polls_2008 %>%
 
 # prune the tree 
 pruned_fit <- prune(fit, cp = 0.01)
+
+# fit a classification tree and plot it
+train_rpart <- train(y ~ .,
+                     method = "rpart",
+                     tuneGrid = data.frame(cp = seq(0.0, 0.1, len = 25)),
+                     data = mnist_27$train)
+plot(train_rpart)
+
+# compute accuracy
+confusionMatrix(predict(train_rpart, mnist_27$test), 
+                mnist_27$test$y)$overall["Accuracy"]
+
+install.packages("randomForest")
+library(randomForest)
+fit <- randomForest(margin~., data = polls_2008) 
+plot(fit)
+
+polls_2008 %>%
+  mutate(y_hat = predict(fit, newdata = polls_2008)) %>% 
+  ggplot() +
+  geom_point(aes(day, margin)) +
+  geom_line(aes(day, y_hat), col="red")
+
+train_rf <- randomForest(y ~ ., data=mnist_27$train)
+confusionMatrix(predict(train_rf, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]
+
+# use cross validation to choose parameter1
+train_rf_2 <- train(y ~ .,
+                    method = "Rborist",
+                    tuneGrid = data.frame(predFixed = 2, minNode = c(3, 50)),
+                    data = mnist_27$train)
+confusionMatrix(predict(train_rf_2, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]
+
+#comprehension check
+#Q1
+
+library(rpart)
+n <- 1000
+sigma <- 0.25
+# set.seed(1) # if using R 3.5 or ealier
+set.seed(1, sample.kind = "Rounding") # if using R 3.6 or later
+x <- rnorm(n, 0, 1)
+y <- 0.75 * x + rnorm(n, 0, sigma)
+dat <- data.frame(x = x, y = y)
+
+fit <- rpart(y~., data=dat)
+plot(fit,margin = 0.1)
+text(fit, cex=0.75)
+
+dat %>% 
+  mutate(y_hat = predict(fit)) %>% 
+  ggplot() +
+  geom_point(aes(x, y)) +
+  geom_step(aes(x, y_hat),col="red")
+
+library(randomForest)
+fit <- randomForest(y~ x, data=dat)
+  dat %>% 
+  mutate(y_hat = predict(fit)) %>% 
+  ggplot() +
+  geom_point(aes(x, y)) +
+  geom_step(aes(x, y_hat), col = "red")
+  
+plot(fit)
+
+library(randomForest)
+fit <- randomForest(y~x,data = dat,nodesize=50, maxnodes=25) 
+  dat %>% 
+  mutate(y_hat = predict(fit)) %>% 
+  ggplot() +
+  geom_step(aes(x, y_hat), col = "red")
 
