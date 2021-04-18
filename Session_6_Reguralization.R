@@ -395,8 +395,6 @@ my_image(cor(y), zlim = c(-1,1))
 range(cor(y))
 axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 
-dat <-cor(y)
-
 #Q3
 s <- svd(y)
 names(s)
@@ -426,3 +424,60 @@ sum(ss_yv[1:3])/ sum(ss_yv)
 #Q7
 s$u %*% diag(s$d)
 identical(s$u %*% diag(s$d), sweep(s$u, 2, s$d, FUN = "*"))
+
+#Q8
+score_avg <- rowMeans(y)
+ud <-sweep(s$u, 2, s$d, FUN = "*")
+ud_1_1 <-ud[,1]
+
+qplot(score_avg, ud_1_1)
+
+#Q9
+y_sv <-y %*% s$v[,1] 
+
+qplot(s$v)
+image(s$v)
+my_image(s$v)
+
+#Q10
+plot(s$u[,1], ylim = c(-0.25, 0.25))
+plot(s$v[,1], ylim = c(-0.25, 0.25))
+with(s, my_image((u[, 1, drop=FALSE]*d[1]) %*% t(v[, 1, drop=FALSE])))
+my_image(y)
+
+#Q11
+resid <- y - with(s,(u[, 1, drop=FALSE]*d[1]) %*% t(v[, 1, drop=FALSE]))
+my_image(cor(resid), zlim = c(-1,1))
+axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
+
+plot(s$u[,2], ylim = c(-0.5, 0.5))
+plot(s$v[,2], ylim = c(-0.5, 0.5))
+with(s, my_image((u[, 2, drop=FALSE]*d[2]) %*% t(v[, 2, drop=FALSE])))
+my_image(resid)
+
+#Q12
+sum(s$d[1:2]^2)/sum(s$d^2) * 100
+
+resid <- y - with(s,sweep(u[, 1:2], 2, d[1:2], FUN="*") %*% t(v[, 1:2]))
+my_image(cor(resid), zlim = c(-1,1))
+axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
+
+
+plot(s$u[,3], ylim = c(-0.5, 0.5))
+plot(s$v[,3], ylim = c(-0.5, 0.5))
+with(s, my_image((u[, 3, drop=FALSE]*d[3]) %*% t(v[, 3, drop=FALSE])))
+my_image(resid)
+
+#Q13
+sum(s$d[1:3]^2)/sum(s$d^2) * 100
+
+resid <- y - with(s,sweep(u[, 1:3], 2, d[1:3], FUN="*") %*% t(v[, 1:3]))
+my_image(cor(resid), zlim = c(-1,1))
+axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
+
+y_hat <- with(s,sweep(u[, 1:3], 2, d[1:3], FUN="*") %*% t(v[, 1:3]))
+my_image(y, zlim = range(y))
+my_image(y_hat, zlim = range(y))
+my_image(y - y_hat, zlim = range(y))
+
+s$u %*% s$v
