@@ -139,6 +139,62 @@ train_knn <- train(train_x, train_y, method = "knn",
 
 y_hat_knn <- predict(train_knn, test_x)
 mean(test_y==y_hat_knn)
+plot(train_knn)
 
+#Q15
+set.seed(9, sample.kind = "Rounding")
+train_rf <- train(train_x, train_y, method = "rf",
+                   tuneGrid = data.frame(mtry= c(3, 5, 7, 9)),
+                   importance = TRUE)
 
+y_hat_rf <- predict(train_rf, test_x)
+mean(test_y==y_hat_rf)
 
+#Q16
+
+train_rf$results
+d <- varImp(train_rf)
+
+#Q17
+models <- c("glm", "lda", "knn", "gamLoess", "qda", "rf", "kmeans")
+
+train_kmeans <-train(train_x,train_y, method = "kmeans")
+y_hat_glm <- predict(glm, test_x)
+
+y_hat_kmeans <- factor(kmeans_preds)
+ensemble <- cbind(y_hat_glm, 
+          y_hat_kmeans, 
+          y_hat_knn, 
+          y_hat_lda, 
+          y_hat_loess,
+          y_hat_qda, 
+          y_hat_rf) 
+
+y_hat_ensemble <- ifelse(rowMeans(ensemble)>1.5,2,1)
+mean(y_hat_ensemble==as.numeric(test_y))
+
+#answer
+ensemble <- cbind(glm = y_hat_glm == "B", lda = y_hat_lda == "B", qda = y_hat_qda == "B", loess = y_hat_loess == "B", rf = y_hat_rf == "B", knn = y_hat_knn == "B", kmeans = y_hat_kmeans == "B")
+ensemble_preds <- ifelse(rowMeans(ensemble) > 0.5, "B", "M")
+mean(ensemble_preds == test_y)
+
+#Q17
+ensemble <-mean(ensemble_preds==test_y)
+glm <-mean(y_hat_glm ==test_y)
+kmeans <-mean(y_hat_kmeans==test_y)
+knn <-mean(y_hat_knn==test_y)
+lda <-mean(y_hat_lda==test_y)
+qda <-mean(y_hat_qda==test_y)
+loess <-mean(y_hat_loess==test_y)
+rf <-mean(y_hat_rf==test_y)
+
+models <- c("Ensemble", "Logistic regression","K means","K nearest neighbors", "LDA", "QDA", "Loess", "Random forest")
+accuracy <- c(mean(ensemble_preds==test_y),
+              mean(y_hat_glm ==test_y),
+              mean(y_hat_kmeans==test_y),
+              mean(y_hat_knn==test_y),
+              mean(y_hat_lda==test_y),
+              mean(y_hat_qda==test_y),
+              mean(y_hat_loess==test_y),
+              mean(y_hat_rf==test_y))
+data.frame(Model = models, Accuracy = accuracy)
