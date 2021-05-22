@@ -74,7 +74,7 @@ naive_rmse
 predictions <- rep(2.5, nrow(test_set)) #predict rate is 3
 RMSE(test_set$rating, predictions)
 
-results <- tibble(method = "Just the average", RMSE = naive_rmse)
+rmse_results <- tibble(method = "Just the average", RMSE = naive_rmse)
 
 #2 b_i 
 
@@ -93,7 +93,7 @@ predicted_ratings <- mu + test_set %>%
 model_1_rmse <- RMSE(predicted_ratings,test_set$rating)
 
 results <- bind_rows(rmse_results,
-                          data_frame(method="Movie Effect Model",
+                          tibble(method="Movie Effect Model",
                                      RMSE = model_1_rmse ))
 
 #b_u
@@ -111,7 +111,7 @@ predicted_ratings <- test_set %>%
 model_2_rmse <- RMSE(predicted_ratings, test_set$rating)
                      
 results <- bind_rows(rmse_results,
-                          data_frame(method="Movie + User Effects Model",  
+                          tibble(method="Movie + User Effects Model",  
                                      RMSE = model_2_rmse ))
 results %>% knitr::kable()
 
@@ -173,3 +173,14 @@ dat <- movielens %>%
   ggplot(aes(x=genres, y=ave, ymin =ave-2*se, ymax= ave+2*se)) +
   geom_point()+  geom_errorbar()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+dat
+n_distinct(movielens$genres)
+
+dat <-movielens %>%
+  group_by(genres) %>%
+  summarise(ave=mean(rating))
+
+movielens  %>% separate_rows(genres, sep = "\\|")
+
+
