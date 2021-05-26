@@ -230,7 +230,9 @@ dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
   confusionMatrix(y_hat_logit, test_set$sex)$overall[["Accuracy"]]
   
 #2 or 7 problem
-  mnist <- read_mnist()
+library(dslabs)
+
+    mnist <- read_mnist()
   is <- mnist_27$index_train[c(which.min(mnist_27$train$x_1), which.max(mnist_27$train$x_1))]
   titles <- c("smallest","largest")
   tmp <- lapply(1:2, function(i){
@@ -238,8 +240,12 @@ dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
       mutate(label=titles[i],
              value = mnist$train$images[is[i],])
   }) 
+
+  library(dslabs)    
+  data("mnist_27")
+  mnist_27$train %>% ggplot(aes(x_1, x_2, color = y)) + geom_point()
   
-read_mnist()
+  
 
 #Q1
 set.seed(2, sample.kind="Rounding") #if you are using R 3.6 or later
